@@ -1,0 +1,9 @@
+flask
+flask-cors
+python-dotenv
+sentence-transformers
+PyPDF2
+pinecone-client
+langchain
+langchain-community
+langchain-core

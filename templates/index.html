@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .chat-container {
+            width: 80%;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .chat-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .chat-messages {
+            padding: 20px;
+            height: 400px;
+            overflow-y: scroll;
+            border-bottom: 1px solid #ddd;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Chat with AI</h1>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" id="question" placeholder="Type your question here...">
+            <button onclick="sendQuestion()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendQuestion() {
+            const question = document.getElementById('question').value;
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+
+            const response = await fetch('http://127.0.0.1:8000/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ msg: question }),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                displayMessage('You', question);
+                displayMessage('AI', data.response);
+                document.getElementById('question').value = '';
+            } else {
+                alert('Error: ' + data.error);
+            }
+        }
+
+        function displayMessage(sender, message) {
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${sender}: ${message}`;
+            document.getElementById('chat-messages').appendChild(messageElement);
+            document.getElementById('chat-messages').scrollTop = document.getElementById('chat-messages').scrollHeight;
+        }
+    </script>
+</body>
+</html>
