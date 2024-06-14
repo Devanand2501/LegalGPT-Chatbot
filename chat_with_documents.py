@@ -24,7 +24,7 @@ LLM = HuggingFaceEndpoint(
 def configure_retriever():
     # embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=os.getenv("GOOGLE_API_KEY"))
     # alternatively: 
-    index_name = "drifko-legal-chatbot"
+    index_name = "legal-bot"
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-l6-v2")
     docsearch = PineconeVectorStore(index_name=index_name, embedding=embeddings, pinecone_api_key= os.getenv("PINECONE_API_KEY"))
     retriever = docsearch.as_retriever(search_kwargs = {'k':2})
