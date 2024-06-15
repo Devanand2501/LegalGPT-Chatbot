@@ -55,7 +55,7 @@ index = pc.Index(index_name)
 index.describe_index_stats()
 
 # Load the Hugging Face model for generating embeddings
-model = SentenceTransformer('all-MiniLM-L6-v2')
+model = SentenceTransformer("sentence-transformers/paraphrase-mpnet-base-v2")
 
 # Function to generate embeddings for the text
 def generate_embeddings(text_list):
