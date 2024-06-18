@@ -50,12 +50,47 @@ def handle_message(message):
     elif is_greeting(message):
         return "Hello! How can I assist you today?"
     else:
-        return None  # No specific action for the message
+        return None
 
 # Function to detect greetings
 def is_greeting(message):
     greetings = ["hi", "hello", "hey"]
     return any(greeting in message.lower() for greeting in greetings)
+
+# Function to check if the response is incomplete
+def is_response_incomplete(response):
+    return not response.strip().endswith(('.', '!', '?')) and len(response.split()) < 100
+
+# Function to get a complete response from the model
+def get_complete_response(question, chat_history, max_iterations=2):
+    response = ""
+    iterations = 0
+
+    while True:
+        # Configure the retrieval chain with the prompt
+        CONV_CHAIN = configure_retrieval_chain()
+        
+        # Generate response
+        result = CONV_CHAIN.invoke({
+            "question": question,
+            "chat_history": chat_history
+        })
+        part_response = str(result['answer'])
+        response += part_response
+
+        # Increment iterations counter
+        iterations += 1
+
+        if not is_response_incomplete(part_response) or iterations >= max_iterations:
+            if iterations >= max_iterations and is_response_incomplete(part_response):
+                response += " This concludes the explanation based on the information provided."
+            break
+
+        # Update the question and chat_history for the next iteration
+        chat_history.append({"input": question, "output": part_response})
+        question = "Please continue."
+
+    return response
 
 @app.route("/api/chat", methods=["GET", "POST"])
 @cross_origin()
@@ -71,28 +106,11 @@ def qa():
         if response:
             return jsonify({"answer": response})
         
-        # Use memory to keep track of conversation history
-        MEMORY.save_context({"input": question}, {"output": ""})
-        chat_history = MEMORY.load_memory_variables({})
-        print("hello")
-        # Configure the retrieval chain with the prompt
-        CONV_CHAIN = configure_retrieval_chain()
-        
-        # Generate response
-        response = CONV_CHAIN.invoke({
-            "question": question,
-            "chat_history": chat_history
-        })
-        # logging.info(f"Generated response: {response}")
-        response = str(response['answer'])
-        print("<","-"*100,">")
-        print(response)
+        # Initialize an empty chat history
+        chat_history = []
 
-        # Update memory with the response
-        MEMORY.save_context({"input": question}, {"output": response})
-        
-        # data = {"question": question, "answer": response}
-        # print(data.answer)
+        # Get a complete response
+        response = get_complete_response(question, chat_history)
         return jsonify({"answer": response})
     
     # Default response for GET requests
