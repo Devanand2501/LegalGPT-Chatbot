@@ -42,7 +42,6 @@ app = Flask(__name__)
 CORS(app)
 
 
-
 # Function to detect greetings and expressions of gratitude
 def handle_message(message):
     if "thank you" in message.lower():
@@ -57,48 +56,48 @@ def is_greeting(message):
     greetings = ["hi", "hello", "hey"]
     return any(greeting in message.lower() for greeting in greetings)
 
-@app.route("/api/chat", methods=["GET", "POST"])
+# Route to render index.html
+@app.route("/")
+@cross_origin()
+def home():
+    return render_template("index.html")
+
+# Updated qa function to handle POST requests
+@app.route("/qa", methods=["POST"])
 @cross_origin()
 def qa():
     if request.method == "POST":
         question = request.json.get("msg")
         if not question:
             return jsonify({"error": "No question provided"}), 400
-        print(question)
 
         # Check if the message is a greeting or expression of gratitude
         response = handle_message(question)
         if response:
             return jsonify({"answer": response})
-        
+
         # Use memory to keep track of conversation history
         MEMORY.save_context({"input": question}, {"output": ""})
         chat_history = MEMORY.load_memory_variables({})
-        print("hello")
+
         # Configure the retrieval chain with the prompt
         CONV_CHAIN = configure_retrieval_chain()
-        
+
         # Generate response
         response = CONV_CHAIN.invoke({
             "question": question,
             "chat_history": chat_history
         })
-        # logging.info(f"Generated response: {response}")
-        response = str(response['answer'])
-        print("<","-"*100,">")
-        print(response)
+
+        response_text = str(response['answer'])
 
         # Update memory with the response
-        MEMORY.save_context({"input": question}, {"output": response})
-        
-        # data = {"question": question, "answer": response}
-        # print(data.answer)
-        return jsonify({"answer": response})
-    
-    # Default response for GET requests
-    data = {"result": "Thank you! I'm just a machine learning model designed to respond to questions and generate text based on my training data. Is there anything specific you'd like to ask or discuss?"}
-    return print(parser.invoke(data))
+        MEMORY.save_context({"input": question}, {"output": response_text})
 
-if __name__ == "__main__":
-    # os.environ['FLASK_ENV'] = 'production'
-    app.run(debug=True, host='0.0.0.0', port=8000,use_reloader=False)
+        return jsonify({"answer": response_text})
+
+    # Default response for GET requests
+    return jsonify({"result": "Thank you! I'm just a machine learning model designed to respond to questions and generate text based on my training data. Is there anything specific you'd like to ask or discuss?"})
+
+if __name__ == '__main__':
+    app.run(debug=True)
